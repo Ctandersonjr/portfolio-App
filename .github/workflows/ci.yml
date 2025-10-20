@@ -1,26 +1,44 @@
-name: CI
+name: CI - Lint, Type-check, and Test
 
 on:
   push:
-    branches: ["**"]
+    branches:
+      -main
   pull_request:
-    branches: ["**"]
+    branches: 
+      - main
 
 jobs:
-  test:
-    name: test
+  build-and-test:
+    name: Lint, Type Check, and Test
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.13'
-      - name: Install tooling
+          python-version: "3.11"
+
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install ruff mypy
-      - name: Lint with ruff
-        run: ruff check .
-      - name: Type-check with mypy
-        run: mypy .
+          pip install -e .
+          pip install ruff mypy pytest
+
+      # ---- Ruff (Lint) ----
+      - name: Lint with Ruff
+        run: |
+          ruff check .
+
+      # ---- Mypy (Type Check) ----
+      - name: Type check with Mypy
+        run: |
+          mypy src/
+
+      # ---- Pytest (Unit Tests) ----
+      - name: Run tests with Pytest
+        run: |
+          pytest --maxfail=1 --disable-warnings -q
